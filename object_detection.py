@@ -32,48 +32,48 @@ detection_scores = object_detection_graph.get_tensor_by_name('detection_scores:0
 detection_classes = object_detection_graph.get_tensor_by_name('detection_classes:0')
 num_detections = object_detection_graph.get_tensor_by_name('num_detections:0')
 
-video = cv2.VideoCapture(VIDEO_STREAM_URL)
+video_stream = cv2.VideoCapture(VIDEO_STREAM_URL)
+
 fourcc = cv2.VideoWriter_fourcc(*'MJPG')
 output_video = cv2.VideoWriter('output.avi', fourcc, 20.0, (720,720))
 
-while(video.isOpened()):
-
-    ret, frame = video.read()
+while(video_stream.isOpened()):
+    frame_recieved, frame = video_stream.read()
     # frame = frame[350:900, 538:1088]
-    
-    frame_expanded = np.expand_dims(frame, axis=0)
 
-    (boxes, scores, classes, num) = sess.run(
-        [detection_boxes, detection_scores, detection_classes, num_detections],
-        feed_dict={image_tensor: frame_expanded})
+    if frame_recieved:
+        
+        frame_expanded = np.expand_dims(frame, axis=0)
 
-    squeezed_scores = np.squeeze(scores)
-    squeezed_classes = np.squeeze(classes).astype(np.int32)
+        (boxes, scores, classes, num) = sess.run(
+            [detection_boxes, detection_scores, detection_classes, num_detections],
+            feed_dict={image_tensor: frame_expanded})
 
-    for i in range (0, 20):
-        if squeezed_scores[i] > 0.95:
-            if squeezed_classes[i] in category_index.keys():
-                class_name = category_index[np.squeeze(classes).astype(np.int32)[i]]['name']
-                if (class_name == "person"):
-                    output_video.write(frame)
+        squeezed_scores = np.squeeze(scores)
+        squeezed_classes = np.squeeze(classes).astype(np.int32)
 
-    
+        vis_util.visualize_boxes_and_labels_on_image_array(
+            frame,
+            np.squeeze(boxes),
+            squeezed_classes,
+            squeezed_scores,
+            category_index,
+            use_normalized_coordinates=True,
+            line_thickness=2,
+            min_score_thresh=0.95)
 
-    vis_util.visualize_boxes_and_labels_on_image_array(
-        frame,
-        np.squeeze(boxes),
-        squeezed_classes,
-        squeezed_scores,
-        category_index,
-        use_normalized_coordinates=True,
-        line_thickness=8,
-        min_score_thresh=0.80)
+        for i in range (0, 5):
+            if squeezed_scores[i] > 0.95:
+                if squeezed_classes[i] in category_index.keys():
+                    class_name = category_index[np.squeeze(classes).astype(np.int32)[i]]['name']
+                    if (class_name == "person"):
+                        output_video.write(frame)    
 
-    cv2.imshow('Object detector', frame)
+        cv2.imshow('Object detector', frame)
 
     if cv2.waitKey(1) == ord('q'):
         break
 
-video.release()
 output_video.release()
+video_stream.release()
 cv2.destroyAllWindows()
