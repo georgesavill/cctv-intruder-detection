@@ -81,7 +81,7 @@ while(video_stream.isOpened()):
             min_score_thresh=0.95)
 
         for i in range (0, 5):
-            if squeezed_scores[i] > 0.95:
+            if squeezed_scores[i] > 0.98:
                 if squeezed_classes[i] in category_index.keys():
                     class_name = category_index[np.squeeze(classes).astype(np.int32)[i]]['name']
                     if (class_name == "person"):
@@ -97,7 +97,6 @@ while(video_stream.isOpened()):
 
 
         cv2.imshow('Object detector', frame)
-        print(empty_frame_count)
     else:
         print("frame skipped")
 
