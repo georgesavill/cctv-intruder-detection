@@ -11,7 +11,7 @@ while (video_feed.isOpened()):
         break
 
     # Crop image to region of interest
-    frame = frame[350:900, 538:1088]
+    # frame = frame[350:900, 538:1088]
 
     cv2.imshow("frame", frame)
 
