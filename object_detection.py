@@ -54,49 +54,71 @@ fourcc = cv2.VideoWriter_fourcc(*'MJPG')
 # output_video = cv2.VideoWriter(getcurrenttime() + '.avi', fourcc, 20.0, (720,720))
 
 empty_frame_count = 10
+analyse_frame = False
+record_frame = False
 
 while(video_stream.isOpened()):
     frame_recieved, frame = video_stream.read()
     # frame = frame[350:900, 538:1088]
 
     if frame_recieved:
+        if analyse_frame:
+            analyse_frame = False
 
-        frame_expanded = np.expand_dims(frame, axis=0)
+            frame_expanded = np.expand_dims(frame, axis=0)
+            (boxes, scores, classes, num) = sess.run(
+                [detection_boxes, detection_scores, detection_classes, num_detections],
+                feed_dict={image_tensor: frame_expanded})
+            squeezed_scores = np.squeeze(scores)
+            squeezed_classes = np.squeeze(classes).astype(np.int32)
+     
 
-        (boxes, scores, classes, num) = sess.run(
-            [detection_boxes, detection_scores, detection_classes, num_detections],
-            feed_dict={image_tensor: frame_expanded})
+            # TODO: Release output_video when recording finishes
+            # TODO: Don't drop frame unless > 30 frames without detected person have passed.
+            # TODO: Cache frames to allow for frames before detection to be collected.
 
-        squeezed_scores = np.squeeze(scores)
-        squeezed_classes = np.squeeze(classes).astype(np.int32)
-
-        vis_util.visualize_boxes_and_labels_on_image_array(
-            frame,
-            np.squeeze(boxes),
-            squeezed_classes,
-            squeezed_scores,
-            category_index,
-            use_normalized_coordinates=True,
-            line_thickness=2,
-            min_score_thresh=0.95)
-
-        for i in range (0, 5):
-            if squeezed_scores[i] > 0.98:
-                if squeezed_classes[i] in category_index.keys():
-                    class_name = category_index[np.squeeze(classes).astype(np.int32)[i]]['name']
-                    if (class_name == "person"):
-                        if (empty_frame_count > 5):
-                            output_video = cv2.VideoWriter(getcurrenttime() + '.avi', fourcc, 20.0, (720,720))
+            object_detected_in_frame = False
+            for i in range (0, len(squeezed_scores)):
+                if squeezed_scores[i] > 0.98:
+                    if squeezed_classes[i] in category_index.keys():
+                        class_name = category_index[np.squeeze(classes).astype(np.int32)[i]]['name']
+                        if (class_name == "car"):
+                            if not record_frame:
+                                output_video = cv2.VideoWriter(getcurrenttime() + '.avi', fourcc, 20.0, (720,720))
+                                
                             output_video.write(frame)
-                        else:
-                            output_video.write(frame)
+                            object_detected_in_frame = True
 
-                        empty_frame_count = 0 
+            if object_detected_in_frame:
+                record_frame = True
+                empty_frame_count = 0
+            elif (empty_frame_count > 30):
+                record_frame = False
+                empty_frame_count += 1
+            else:                
+                empty_frame_count += 1
+            print(empty_frame_count)
 
-        empty_frame_count += 1
 
+
+            # vis_util.visualize_boxes_and_labels_on_image_array(
+            #     frame,
+            #     np.squeeze(boxes),
+            #     squeezed_classes,
+            #     squeezed_scores,
+            #     category_index,
+            #     use_normalized_coordinates=True,
+            #     line_thickness=2,
+            #     min_score_thresh=0.95)
+
+        else:
+            analyse_frame = True
+
+            if record_frame:
+                output_video.write(frame)
 
         cv2.imshow('Object detector', frame)
+
     else:
         print("frame skipped")
 
