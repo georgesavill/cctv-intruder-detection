@@ -50,7 +50,7 @@ num_detections = object_detection_graph.get_tensor_by_name('num_detections:0')
 video_stream = cv2.VideoCapture(VIDEO_STREAM_URL)
 
 
-fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+# fourcc = cv2.VideoWriter_fourcc(*'MJPG')
 # output_video = cv2.VideoWriter(getcurrenttime() + '.avi', fourcc, 20.0, (720,720))
 
 # empty_frame_count = 10
@@ -59,7 +59,8 @@ analyse_frame = False
 
 while(video_stream.isOpened()):
     frame_recieved, frame = video_stream.read()
-    # frame = frame[350:900, 538:1088]
+    
+    frame = cv2.resize(frame, (480, 270))
 
     if frame_recieved:
         if analyse_frame:
