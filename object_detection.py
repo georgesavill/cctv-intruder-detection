@@ -9,16 +9,16 @@ from utils import label_map_util
 from utils import visualization_utils as vis_util
 
 
-def getcurrenttime():
-    now = datetime.now()
-    year = str(now.year)
-    month = str(now.month).zfill(2)
-    day = str(now.day).zfill(2)
-    hour = str(now.hour).zfill(2)
-    minute = str(now.minute).zfill(2)
-    second = str(now.second).zfill(2)
+# def getcurrenttime():
+#     now = datetime.now()
+#     year = str(now.year)
+#     month = str(now.month).zfill(2)
+#     day = str(now.day).zfill(2)
+#     hour = str(now.hour).zfill(2)
+#     minute = str(now.minute).zfill(2)
+#     second = str(now.second).zfill(2)
     
-    return(year + "-" + month + "-" + day + "-" + hour + "-" + minute + "-" + second)
+#     return(year + "-" + month + "-" + day + "-" + hour + "-" + minute + "-" + second)
 
 
 VIDEO_STREAM_URL = "http://username:password@192.168.1.93:8080/video"
@@ -53,9 +53,9 @@ video_stream = cv2.VideoCapture(VIDEO_STREAM_URL)
 fourcc = cv2.VideoWriter_fourcc(*'MJPG')
 # output_video = cv2.VideoWriter(getcurrenttime() + '.avi', fourcc, 20.0, (720,720))
 
-empty_frame_count = 10
+# empty_frame_count = 10
 analyse_frame = False
-record_frame = False
+# record_frame = False
 
 while(video_stream.isOpened()):
     frame_recieved, frame = video_stream.read()
@@ -77,45 +77,45 @@ while(video_stream.isOpened()):
             # TODO: Don't drop frame unless > 30 frames without detected person have passed.
             # TODO: Cache frames to allow for frames before detection to be collected.
 
-            object_detected_in_frame = False
-            for i in range (0, len(squeezed_scores)):
-                if squeezed_scores[i] > 0.98:
-                    if squeezed_classes[i] in category_index.keys():
-                        class_name = category_index[np.squeeze(classes).astype(np.int32)[i]]['name']
-                        if (class_name == "car"):
-                            if not record_frame:
-                                output_video = cv2.VideoWriter(getcurrenttime() + '.avi', fourcc, 20.0, (720,720))
+            # object_detected_in_frame = False
+            # for i in range (0, len(squeezed_scores)):
+            #     if squeezed_scores[i] > 0.98:
+            #         if squeezed_classes[i] in category_index.keys():
+            #             class_name = category_index[np.squeeze(classes).astype(np.int32)[i]]['name']
+            #             if (class_name == "car"):
+            #                 if not record_frame:
+            #                     # output_video = cv2.VideoWriter(getcurrenttime() + '.avi', fourcc, 20.0, (720,720))
                                 
-                            output_video.write(frame)
-                            object_detected_in_frame = True
+            #                 output_video.write(frame)
+            #                 object_detected_in_frame = True
 
-            if object_detected_in_frame:
-                record_frame = True
-                empty_frame_count = 0
-            elif (empty_frame_count > 30):
-                record_frame = False
-                empty_frame_count += 1
-            else:                
-                empty_frame_count += 1
-            print(empty_frame_count)
+            # if object_detected_in_frame:
+            #     record_frame = True
+            #     empty_frame_count = 0
+            # elif (empty_frame_count > 30):
+            #     record_frame = False
+            #     empty_frame_count += 1
+            # else:                
+            #     empty_frame_count += 1
+            # print(empty_frame_count)
 
 
 
-            # vis_util.visualize_boxes_and_labels_on_image_array(
-            #     frame,
-            #     np.squeeze(boxes),
-            #     squeezed_classes,
-            #     squeezed_scores,
-            #     category_index,
-            #     use_normalized_coordinates=True,
-            #     line_thickness=2,
-            #     min_score_thresh=0.95)
+            vis_util.visualize_boxes_and_labels_on_image_array(
+                frame,
+                np.squeeze(boxes),
+                squeezed_classes,
+                squeezed_scores,
+                category_index,
+                use_normalized_coordinates=True,
+                line_thickness=2,
+                min_score_thresh=0.95)
 
         else:
             analyse_frame = True
 
-            if record_frame:
-                output_video.write(frame)
+            # if record_frame:
+            #     output_video.write(frame)
 
         cv2.imshow('Object detector', frame)
 
@@ -125,6 +125,6 @@ while(video_stream.isOpened()):
     if cv2.waitKey(1) == ord('q'):
         break
 
-output_video.release()
+# output_video.release()
 video_stream.release()
 cv2.destroyAllWindows()
